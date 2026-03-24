@@ -20,7 +20,11 @@ export function CableEdge({
   const total = data?.total ?? 1;
   const offset = (index - (total - 1) / 2) * SPREAD;
 
-  const labelRatio = total <= 1 ? 0.5 : 0.25 + (index / (total - 1)) * 0.5;
+  const hasPo = data?.poId != null;
+  /* When a Po oval sits at midpoint, push interface labels toward the switch (target) end */
+  const labelRatio = hasPo
+    ? (total <= 1 ? 0.2 : 0.1 + (index / (total - 1)) * 0.2)
+    : (total <= 1 ? 0.5 : 0.25 + (index / (total - 1)) * 0.5);
 
   const oSourceX = sourceX + offset;
   const oSourceY = sourceY;
@@ -37,11 +41,18 @@ export function CableEdge({
   const labelX = oSourceX + (oTargetX - oSourceX) * labelRatio;
   const labelY = oSourceY + (oTargetY - oSourceY) * labelRatio;
 
-  const showPo = data?.poId != null && total > 1 && index === 0;
+  const showPo = data?.poId != null && index === 0;
   const ovalX = sourceX + (targetX - sourceX) * 0.5;
   const ovalY = sourceY + (targetY - sourceY) * 0.5;
-  const ovalW = ((total - 1) * SPREAD) + 52;
+  const ovalW = Math.max(80, ((total - 1) * SPREAD) + 52);
   const ovalH = ovalW * 0.55;
+
+  /* Direction unit vector from source to target (toward host) */
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
 
   return (
     <>
@@ -74,6 +85,40 @@ export function CableEdge({
               vPC {data.poId}
             </span>
           </div>
+        )}
+        {/* Cable segments drawn ON TOP of the oval (bottom half toward host) for 3D threading effect */}
+        {showPo && (
+          <svg
+            style={{
+              position: "absolute",
+              left: ovalX,
+              top: ovalY,
+              transform: "translate(-50%, -50%)",
+              width: ovalW,
+              height: ovalH,
+              overflow: "visible",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            {Array.from({ length: total }, (_, i) => {
+              const cableOff = (i - (total - 1) / 2) * SPREAD;
+              const cx = ovalW / 2 + cableOff;
+              const cy = ovalH / 2;
+              const segLen = Math.max(ovalW, ovalH) * 0.6;
+              return (
+                <line
+                  key={i}
+                  x1={cx}
+                  y1={cy}
+                  x2={cx + ux * segLen}
+                  y2={cy + uy * segLen}
+                  stroke="#5f6368"
+                  strokeWidth={2}
+                />
+              );
+            })}
+          </svg>
         )}
         {/* Interface label */}
         <div

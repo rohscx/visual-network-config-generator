@@ -84,7 +84,7 @@ export function TopologyCanvas() {
             interfaceName: cg.switch_a_interfaces[i],
             index: i,
             total: aCount,
-            poId: aCount > 1 ? poId : null,
+            poId,
           },
         });
       }
@@ -101,7 +101,7 @@ export function TopologyCanvas() {
             interfaceName: cg.switch_b_interfaces[i],
             index: i,
             total: bCount,
-            poId: bCount > 1 ? poId : null,
+            poId,
           },
         });
       }
