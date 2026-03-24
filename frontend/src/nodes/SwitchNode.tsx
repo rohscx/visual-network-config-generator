@@ -2,6 +2,8 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { SwitchNodeData } from "../types";
 
 export function SwitchNode({ data }: NodeProps & { data: SwitchNodeData }) {
+  const peerSide = data.switchSide === "A" ? Position.Right : Position.Left;
+
   return (
     <div
       style={{
@@ -19,7 +21,12 @@ export function SwitchNode({ data }: NodeProps & { data: SwitchNodeData }) {
         {data.switchSide === "A" ? "Switch A" : "Switch B"}
       </div>
       <div>{data.label}</div>
-      <Handle type="target" position={Position.Bottom} />
+      <Handle type="target" position={Position.Bottom} id="host" />
+      <Handle
+        type={data.switchSide === "A" ? "source" : "target"}
+        position={peerSide}
+        id="peer"
+      />
     </div>
   );
 }

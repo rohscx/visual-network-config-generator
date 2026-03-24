@@ -84,4 +84,5 @@ export interface CableEdgeData {
   interfaceName: string;
   index: number;
   total: number;
+  poId: number | null;
 }

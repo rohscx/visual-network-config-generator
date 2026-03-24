@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { deriveIdFromInterfaces } from "../utils";
 import {
   ReactFlow,
   Background,
@@ -12,10 +13,11 @@ import "@xyflow/react/dist/style.css";
 import { SwitchNode } from "../nodes/SwitchNode";
 import { HostNode } from "../nodes/HostNode";
 import { CableEdge } from "../edges/CableEdge";
+import { PeerLinkEdge } from "../edges/PeerLinkEdge";
 import { useTopologyContext } from "../context/TopologyContext";
 
 const nodeTypes = { switchNode: SwitchNode, hostNode: HostNode } as const;
-const edgeTypes = { cableEdge: CableEdge } as const;
+const edgeTypes = { cableEdge: CableEdge, peerLinkEdge: PeerLinkEdge } as const;
 
 export function TopologyCanvas() {
   const { state, dispatch } = useTopologyContext();
@@ -52,8 +54,23 @@ export function TopologyCanvas() {
   }, [state.hosts, state.switchAName, state.switchBName]);
 
   const edges: Edge[] = useMemo(() => {
-    const result: Edge[] = [];
+    const result: Edge[] = [
+      {
+        id: "peer-link",
+        source: "switch-a",
+        target: "switch-b",
+        sourceHandle: "peer",
+        targetHandle: "peer",
+        type: "peerLinkEdge",
+        deletable: false,
+        selectable: false,
+      },
+    ];
     for (const cg of state.connectionGroups) {
+      const allIfaces = [...cg.switch_a_interfaces, ...cg.switch_b_interfaces];
+      const derived = deriveIdFromInterfaces(allIfaces);
+      const poId = cg.channel_group ?? derived;
+
       const aCount = cg.switch_a_interfaces.length;
       for (let i = 0; i < aCount; i++) {
         result.push({
@@ -67,6 +84,7 @@ export function TopologyCanvas() {
             interfaceName: cg.switch_a_interfaces[i],
             index: i,
             total: aCount,
+            poId: aCount > 1 ? poId : null,
           },
         });
       }
@@ -83,6 +101,7 @@ export function TopologyCanvas() {
             interfaceName: cg.switch_b_interfaces[i],
             index: i,
             total: bCount,
+            poId: bCount > 1 ? poId : null,
           },
         });
       }
